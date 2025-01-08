@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カテゴリー別リンク管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #0073e6;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        a {
+            text-decoration: none;
+            color: #0073e6;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .add-url-container, .add-category-container {
+            margin-top: 20px;
+        }
+        input, select, button {
+            margin: 5px 0;
+            padding: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>カテゴリー別リンク管理</h1>
+    <p>カテゴリーごとにURLを表示します。新しいリンクやカテゴリーを追加したり、削除することができます。</p>
+
+    <!-- リンク表示エリア -->
+    <div id="link-container"></div>
+
+    <!-- URL追加フォーム -->
+    <div class="add-url-container">
+        <h2>URLを追加する</h2>
+        <label>カテゴリー:
+            <select id="category-select"></select>
+        </label><br>
+        <label>名前: <input type="text" id="url-name" placeholder="サイト名"></label><br>
+        <label>URL: <input type="text" id="url-link" placeholder="https://example.com"></label><br>
+        <button id="add-url-button">追加する</button>
+    </div>
+
+    <!-- カテゴリー追加/削除フォーム -->
+    <div class="add-category-container">
+        <h2>カテゴリーを管理する</h2>
+        <label>新しいカテゴリー名: <input type="text" id="new-category-name" placeholder="カテゴリー名"></label><br>
+        <button id="add-category-button">カテゴリーを追加する</button><br><br>
+        <label>削除するカテゴリー:
+            <select id="delete-category-select"></select>
+        </label><br>
+        <button id="delete-category-button">カテゴリーを削除する</button>
+    </div>
+
+    <script>
+        // 初期データ: カテゴリーごとにURLを格納
+        const links = {
+            "情報": [
+                { name: "Google", url: "https://www.google.co.jp/" },
+                { name: "TEPCO くらしのラボ", url: "https://www.app.kurashi.tepco.co.jp/" }
+            ],
+            "ソーシャル": [
+                { name: "ChatGPT", url: "https://chatgpt.com/g/g-8sPlJ64Gn-tiyatutogpt" },
+                { name: "YouTube", url: "https://m.youtube.com/" },
+                { name: "Twitter", url: "https://mobile.twitter.com/home?locale=ja" }
+            ],
+            "ニュース": [
+                { name: "Yahoo!ニュース", url: "https://news.yahoo.co.jp/" },
+                { name: "PRESIDENT", url: "https://president.jp/" }
+            ]
+        };
+
+        // リンク表示エリアの要素
+        const linkContainer = document.getElementById("link-container");
+
+        // カテゴリー選択要素
+        const categorySelect = document.getElementById("category-select");
+        const deleteCategorySelect = document.getElementById("delete-category-select");
+
+        // カテゴリーを再描画する
+        function updateCategorySelects() {
+            categorySelect.innerHTML = "";
+            deleteCategorySelect.innerHTML = "";
+            for (const category in links) {
+                const option1 = document.createElement("option");
+                option1.value = category;
+                option1.textContent = category;
+                categorySelect.appendChild(option1);
+
+                const option2 = document.createElement("option");
+                option2.value = category;
+                option2.textContent = category;
+                deleteCategorySelect.appendChild(option2);
+            }
+        }
+
+        // リンクをカテゴリー別に表示する関数
+        function renderLinks() {
+            linkContainer.innerHTML = ""; // 初期化
+            for (const [category, urls] of Object.entries(links)) {
+                const categoryHeader = document.createElement("h2");
+                categoryHeader.textContent = category;
+                linkContainer.appendChild(categoryHeader);
+
+                const ul = document.createElement("ul");
+                urls.forEach((site, index) => {
+                    const li = document.createElement("li");
+
+                    const link = document.createElement("a");
+                    link.href = site.url;
+                    link.textContent = site.name;
+                    link.target = "_blank";
+
+                    // 削除ボタン
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "削除";
+                    deleteButton.style.marginLeft = "10px";
+                    deleteButton.addEventListener("click", () => {
+                        if (confirm(`${site.name} を削除しますか？`)) {
+                            urls.splice(index, 1); // 配列から削除
+                            renderLinks(); // 再描画
+                        }
+                    });
+
+                    li.appendChild(link);
+                    li.appendChild(deleteButton);
+                    ul.appendChild(li);
+                });
+                linkContainer.appendChild(ul);
+            }
+        }
+
+        // URLを追加する
+        document.getElementById("add-url-button").addEventListener("click", () => {
+            const category = categorySelect.value;
+            const name = document.getElementById("url-name").value;
+            const url = document.getElementById("url-link").value;
+
+            if (name && url) {
+                links[category].push({ name, url });
+                renderLinks(); // 再描画
+                document.getElementById("url-name").value = "";
+                document.getElementById("url-link").value = "";
+            } else {
+                alert("名前とURLを入力してください！");
+            }
+        });
+
+        // カテゴリーを追加する
+        document.getElementById("add-category-button").addEventListener("click", () => {
+            const newCategory = document.getElementById("new-category-name").value.trim();
+            if (newCategory && !links[newCategory]) {
+                links[newCategory] = [];
+                updateCategorySelects();
+                renderLinks();
+                document.getElementById("new-category-name").value = "";
+            } else {
+                alert("新しいカテゴリー名を入力するか、すでに存在しない名前を指定してください！");
+            }
+        });
+
+        // カテゴリーを削除する
+        document.getElementById("delete-category-button").addEventListener("click", () => {
+            const categoryToDelete = deleteCategorySelect.value;
+            if (confirm(`${categoryToDelete} カテゴリーを削除しますか？`)) {
+                delete links[categoryToDelete];
+                updateCategorySelects();
+                renderLinks();
+            }
+        });
+
+        // 初期描画
+        updateCategorySelects();
+        renderLinks();
+    </script>
+</body>
+</html>
